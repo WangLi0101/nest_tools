@@ -1,4 +1,12 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ApiOkResponseWithData } from '../common/swagger';
 import { toValidatedVo } from '../common/vo';
 import {
   AddTaskCommentDto,
@@ -24,17 +32,23 @@ import {
   StartProcessDataVo,
 } from './vo';
 
+@ApiTags('Flowable')
 @Controller('flowable')
 export class FlowableController {
   constructor(private readonly flowableService: FlowableService) {}
 
   @Get('definitions')
+  @ApiOperation({ summary: 'Get latest process definitions' })
+  @ApiOkResponseWithData({ model: GetProcessDefinitionsDataVo })
   async getProcessDefinitions(): Promise<GetProcessDefinitionsDataVo> {
     const data = await this.flowableService.getLatestProcessDefinitions();
     return toValidatedVo(GetProcessDefinitionsDataVo, data);
   }
 
   @Post('process')
+  @ApiOperation({ summary: 'Start process instance' })
+  @ApiBody({ type: StartProcessDto })
+  @ApiOkResponseWithData({ model: StartProcessDataVo })
   async startProcess(
     @Body() body: StartProcessDto,
   ): Promise<StartProcessDataVo> {
@@ -47,6 +61,10 @@ export class FlowableController {
   }
 
   @Get('tasks')
+  @ApiOperation({ summary: 'Get tasks' })
+  @ApiQuery({ name: 'assignee', required: false, example: 'kermit' })
+  @ApiQuery({ name: 'group', required: false, example: 'managers' })
+  @ApiOkResponseWithData({ model: GetTasksDataVo })
   async getTasks(@Query() query: GetTasksQueryDto): Promise<GetTasksDataVo> {
     const data = await this.flowableService.getTasks(
       query.assignee,
@@ -56,12 +74,19 @@ export class FlowableController {
   }
 
   @Get('tasks/:id')
+  @ApiOperation({ summary: 'Get task detail' })
+  @ApiParam({ name: 'id', description: 'Task id', example: '2501' })
+  @ApiOkResponseWithData({ model: GetTaskDataVo })
   async getTask(@Param() params: IdParamDto): Promise<GetTaskDataVo> {
     const data = await this.flowableService.getTask(params.id);
     return toValidatedVo(GetTaskDataVo, data);
   }
 
   @Post('tasks/:id/complete')
+  @ApiOperation({ summary: 'Complete task' })
+  @ApiParam({ name: 'id', description: 'Task id', example: '2501' })
+  @ApiBody({ type: CompleteTaskDto })
+  @ApiOkResponseWithData({ model: CompleteTaskDataVo })
   async completeTask(
     @Param() params: IdParamDto,
     @Body() body: CompleteTaskDto,
@@ -74,6 +99,10 @@ export class FlowableController {
   }
 
   @Get('history/process')
+  @ApiOperation({ summary: 'Get historic process instances' })
+  @ApiQuery({ name: 'processInstanceId', required: false, example: '5001' })
+  @ApiQuery({ name: 'finished', required: false, example: true })
+  @ApiOkResponseWithData({ model: GetHistoryProcessDataVo })
   async getHistoryProcess(
     @Query() query: GetHistoryProcessQueryDto,
   ): Promise<GetHistoryProcessDataVo> {
@@ -85,6 +114,9 @@ export class FlowableController {
   }
 
   @Get('history/tasks')
+  @ApiOperation({ summary: 'Get historic task instances' })
+  @ApiQuery({ name: 'processInstanceId', required: false, example: '5001' })
+  @ApiOkResponseWithData({ model: GetHistoryTasksDataVo })
   async getHistoryTasks(
     @Query() query: GetHistoryTasksQueryDto,
   ): Promise<GetHistoryTasksDataVo> {
@@ -104,6 +136,16 @@ export class FlowableController {
   }
 
   @Get('definitions/:id/xml')
+  @ApiOperation({ summary: 'Get process definition XML' })
+  @ApiParam({
+    name: 'id',
+    description: 'Process definition id',
+    example: 'leave:1:5004',
+  })
+  @ApiOkResponseWithData({
+    model: GetProcessDefinitionXmlDataVo,
+    dataSchema: { type: 'string', example: '<?xml version="1.0"?>' },
+  })
   async getProcessDefinitionXML(
     @Param() params: IdParamDto,
   ): Promise<GetProcessDefinitionXmlDataVo> {
@@ -114,6 +156,12 @@ export class FlowableController {
   }
 
   @Get('process/:id/activity-ids')
+  @ApiOperation({ summary: 'Get active activity ids' })
+  @ApiParam({ name: 'id', description: 'Process instance id', example: '5001' })
+  @ApiOkResponseWithData({
+    model: GetProcessActiveActivityIdsDataVo,
+    dataSchema: { type: 'array', items: { type: 'string' } },
+  })
   async getProcessActiveActivityIds(
     @Param() params: IdParamDto,
   ): Promise<GetProcessActiveActivityIdsDataVo> {
@@ -124,6 +172,12 @@ export class FlowableController {
   }
 
   @Get('tasks/:id/comments')
+  @ApiOperation({ summary: 'Get task comments' })
+  @ApiParam({ name: 'id', description: 'Task id', example: '2501' })
+  @ApiOkResponseWithData({
+    model: GetTaskCommentsDataVo,
+    dataSchema: { type: 'array', items: { type: 'object' } },
+  })
   async getTaskComments(
     @Param() params: IdParamDto,
   ): Promise<GetTaskCommentsDataVo> {
@@ -132,6 +186,10 @@ export class FlowableController {
   }
 
   @Post('tasks/:id/comments')
+  @ApiOperation({ summary: 'Add task comment' })
+  @ApiParam({ name: 'id', description: 'Task id', example: '2501' })
+  @ApiBody({ type: AddTaskCommentDto })
+  @ApiOkResponseWithData({ model: AddTaskCommentDataVo })
   async addTaskComment(
     @Param() params: IdParamDto,
     @Body() body: AddTaskCommentDto,

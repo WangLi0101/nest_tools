@@ -9,9 +9,20 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiProduces,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ApiOkResponseWithData } from '../common/swagger';
 import { toValidatedVo } from '../common/vo';
 import { OnlyofficeService } from './onlyoffice.service';
 import {
@@ -25,11 +36,15 @@ import {
   OnlyofficeEditorConfigDataVo,
 } from './vo';
 
+@ApiTags('OnlyOffice')
 @Controller('onlyoffice')
 export class OnlyofficeController {
   constructor(private readonly onlyofficeService: OnlyofficeService) {}
 
   @Get('config/:fileId')
+  @ApiOperation({ summary: 'Get onlyoffice editor config' })
+  @ApiParam({ name: 'fileId', description: 'File id', example: 'demo.pdf' })
+  @ApiOkResponseWithData({ model: OnlyofficeEditorConfigDataVo })
   async getConfig(
     @Param() params: FileIdParamDto,
     @Req() request: Request,
@@ -41,6 +56,11 @@ export class OnlyofficeController {
 
   @Post('callback')
   @HttpCode(200)
+  @ApiOperation({ summary: 'Onlyoffice callback' })
+  @ApiConsumes('application/json')
+  @ApiBody({ type: OnlyofficeCallbackBodyDto })
+  @ApiQuery({ name: 'fileName', required: true, example: 'demo.pdf' })
+  @ApiOkResponseWithData({ model: OnlyofficeCallbackDataVo })
   async callback(
     @Body() body: OnlyofficeCallbackBodyDto,
     @Query() query: OnlyofficeCallbackQueryDto,
@@ -50,9 +70,17 @@ export class OnlyofficeController {
   }
 }
 
+@ApiTags('Files')
 @Controller('files')
 export class FilesController {
   @Get(':fileName')
+  @ApiOperation({ summary: 'Get file stream' })
+  @ApiParam({ name: 'fileName', description: 'File name', example: 'demo.pdf' })
+  @ApiProduces('application/octet-stream')
+  @ApiOkResponse({
+    description: 'Binary file stream',
+    schema: { type: 'string', format: 'binary' },
+  })
   getFile(@Param() params: FileNameParamDto, @Res() res: Response) {
     const { fileName } = params;
     const filePath = path.join(process.cwd(), 'files', fileName);
