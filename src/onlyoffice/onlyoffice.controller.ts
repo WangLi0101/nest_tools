@@ -1,45 +1,60 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Query,
-  Param,
-  Res,
-  StreamableFile,
-  Req,
   HttpCode,
+  Param,
+  Post,
+  Query,
+  Req,
+  Res,
 } from '@nestjs/common';
-import { OnlyofficeService } from './onlyoffice.service';
-import { Response, Request } from 'express';
+import { Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { toValidatedVo } from '../common/vo';
+import { OnlyofficeService } from './onlyoffice.service';
+import {
+  FileIdParamDto,
+  FileNameParamDto,
+  OnlyofficeCallbackBodyDto,
+  OnlyofficeCallbackQueryDto,
+} from './dto/onlyoffice.dto';
+import {
+  OnlyofficeCallbackDataVo,
+  OnlyofficeEditorConfigDataVo,
+} from './vo';
 
 @Controller('onlyoffice')
 export class OnlyofficeController {
   constructor(private readonly onlyofficeService: OnlyofficeService) {}
 
-  // 获取编辑器配置
   @Get('config/:fileId')
-  getConfig(@Param('fileId') fileId: string, @Req() request: Request) {
+  async getConfig(
+    @Param() params: FileIdParamDto,
+    @Req() request: Request,
+  ): Promise<OnlyofficeEditorConfigDataVo> {
     const userIp = request.ip || '127.0.0.1';
-    return this.onlyofficeService.getEditorConfig(fileId, userIp);
+    const data = await this.onlyofficeService.getEditorConfig(params.fileId, userIp);
+    return toValidatedVo(OnlyofficeEditorConfigDataVo, data);
   }
 
-  // 处理 OnlyOffice 回调
   @Post('callback')
   @HttpCode(200)
-  async callback(@Body() body: any, @Query() query: any) {
-    return this.onlyofficeService.handleCallback(body, query);
+  async callback(
+    @Body() body: OnlyofficeCallbackBodyDto,
+    @Query() query: OnlyofficeCallbackQueryDto,
+  ): Promise<OnlyofficeCallbackDataVo> {
+    const data = await this.onlyofficeService.handleCallback(body, query);
+    return toValidatedVo(OnlyofficeCallbackDataVo, data);
   }
 }
 
 @Controller('files')
 export class FilesController {
-  // 获取文件流
   @Get(':fileName')
-  @Get(':fileName')
-  getFile(@Param('fileName') fileName: string, @Res() res: Response) {
+  getFile(@Param() params: FileNameParamDto, @Res() res: Response) {
+    const { fileName } = params;
     const filePath = path.join(process.cwd(), 'files', fileName);
 
     if (!fs.existsSync(filePath)) {

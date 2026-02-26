@@ -4,6 +4,10 @@ import * as path from 'path';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
 import { PDFDocument, rgb } from 'pdf-lib';
+import {
+  ExternalServiceBusinessException,
+  ValidationBusinessException,
+} from '../common/exceptions/custom.exceptions';
 @Injectable()
 export class OnlyofficeService {
   private readonly logger = new Logger(OnlyofficeService.name);
@@ -31,6 +35,9 @@ export class OnlyofficeService {
   }
   // 生成前端初始化编辑器所需的配置
   async getEditorConfig(fileId: string, userIp: string) {
+    if (!fileId) {
+      throw new ValidationBusinessException('fileId is required');
+    }
     const fileName = fileId; // 为了简单起见，假设 fileId 就是文件名
     const filePath = path.join(this.filesDir, fileName);
     // 文件类型
@@ -96,6 +103,10 @@ export class OnlyofficeService {
     const { status, url } = body;
     const { fileName } = query;
 
+    if (!fileName) {
+      throw new ValidationBusinessException('fileName is required in callback');
+    }
+
     this.logger.log(`Callback for ${fileName} with status ${status}`);
 
     await this.processSave(body, fileName);
@@ -114,7 +125,10 @@ export class OnlyofficeService {
       downloadUrl = `${this.documentServerUrl}${urlObj.pathname}${urlObj.search}`;
     } catch (e) {
       this.logger.error('URL parse error', e);
-      return;
+      throw new ValidationBusinessException('Invalid callback url', {
+        fileName,
+        url,
+      });
     }
 
     try {
@@ -132,6 +146,10 @@ export class OnlyofficeService {
       });
     } catch (error) {
       this.logger.error('Async save failed', error);
+      throw new ExternalServiceBusinessException(
+        'OnlyOffice file download failed',
+        { fileName },
+      );
     }
   }
 
