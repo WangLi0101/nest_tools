@@ -3,11 +3,10 @@ import {
   Controller,
   Get,
   Query,
-  Req,
   Res,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { DownloadService } from './download.service';
 
 @ApiTags('Download')
@@ -19,7 +18,7 @@ export class DownloadController {
   @ApiOperation({
     summary: '代理下载远程文件',
     description:
-      '传入远程文件 URL，服务端将其内容以流的形式转发给客户端，自动触发浏览器下载。支持断点续传（透传 Range 头）。',
+      '传入远程文件 URL，服务端将其内容以流的形式转发给客户端，触发浏览器下载。',
   })
   @ApiQuery({
     name: 'url',
@@ -30,13 +29,11 @@ export class DownloadController {
   })
   async proxyDownload(
     @Query('url') url: string,
-    @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
     if (!url) {
       throw new BadRequestException('参数 url 不能为空');
     }
-
-    await this.downloadService.pipeRemoteFile(url, res, req);
+    await this.downloadService.pipeRemoteFile(url, res);
   }
 }
