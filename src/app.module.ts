@@ -3,11 +3,12 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { OnlyofficeModule } from './onlyoffice/onlyoffice.module';
 import { FlowableModule } from './flowable/flowable.module';
 import { DouyinModule } from './douyin/douyin.module';
+import { DownloadModule } from './download/download.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 @Module({
-  imports: [OnlyofficeModule, FlowableModule, DouyinModule],
+  imports: [OnlyofficeModule, FlowableModule, DouyinModule, DownloadModule],
   controllers: [],
   providers: [
     {
