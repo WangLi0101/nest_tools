@@ -2,11 +2,12 @@ import { Module, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { OnlyofficeModule } from './onlyoffice/onlyoffice.module';
 import { FlowableModule } from './flowable/flowable.module';
+import { DouyinModule } from './douyin/douyin.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 @Module({
-  imports: [OnlyofficeModule, FlowableModule],
+  imports: [OnlyofficeModule, FlowableModule, DouyinModule],
   controllers: [],
   providers: [
     {

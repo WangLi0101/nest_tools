@@ -64,3 +64,38 @@ Serves the file content to OnlyOffice Document Server (and potentially the user)
     pnpm start:dev
     ```
 2.  Use Postman or a browser to query the config: `http://localhost:3000/onlyoffice/config/test.docx` (This will create a default file if it doesn't exist).
+
+## Douyin 无水印解析
+
+### POST `/douyin/resolve`
+
+请求体：
+
+```json
+{
+  "shareText": "8.97 复制打开抖音，看看【学院派Academia的作品】... https://v.douyin.com/IQ-uaVSmjUc/ bNJ:/ y@G.vF 06/26"
+}
+```
+
+返回示例（统一响应体中的 `data`）：
+
+```json
+{
+  "shareUrl": "https://v.douyin.com/IQ-uaVSmjUc/",
+  "resolvedUrl": "https://www.douyin.com/video/7523320109629281576?...",
+  "awemeId": "7523320109629281576",
+  "mediaType": "video",
+  "title": "伊朗何以至此...",
+  "author": "学院派Academia",
+  "coverUrl": "https://p3-sign.douyinpic.com/xxx.jpeg",
+  "videoUrls": [
+    "https://aweme.snssdk.com/aweme/v1/play/?video_id=xxx"
+  ],
+  "imageUrls": [],
+  "imageVideoUrls": []
+}
+```
+
+### GET `/douyin/resolve?shareText=...`
+
+也支持通过 query 直接传 `shareText` 调用，适合浏览器或简单调试场景。
